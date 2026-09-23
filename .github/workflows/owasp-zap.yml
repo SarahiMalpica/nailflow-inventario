@@ -1,0 +1,90 @@
+name: Seguridad OWASP ZAP
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  zap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Descargar el codigo
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Configurar Node.js 24
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Iniciar NailFlow temporalmente
+        env:
+          HOST: 0.0.0.0
+          PORT: '3000'
+          DB_PATH: ':memory:'
+        run: |
+          export JWT_SECRET="$(node -e "process.stdout.write(require('node:crypto').randomBytes(48).toString('hex'))")"
+          node server.js > "$RUNNER_TEMP/nailflow-zap.log" 2>&1 &
+          echo "$!" > "$RUNNER_TEMP/nailflow-zap.pid"
+
+      - name: Esperar y comprobar la salud de NailFlow
+        run: |
+          curl --fail --silent --show-error \
+            --retry 15 --retry-connrefused --retry-delay 1 \
+            --connect-timeout 2 --max-time 5 \
+            http://127.0.0.1:3000/api/health \
+            --output "$RUNNER_TEMP/nailflow-zap-health.json"
+
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = require('node:path');
+          const assert = require('node:assert/strict');
+          const health = JSON.parse(fs.readFileSync(
+            path.join(process.env.RUNNER_TEMP, 'nailflow-zap-health.json'), 'utf8'
+          ));
+          assert.equal(health.status, 'ok');
+          assert.equal(health.service, 'NailFlow');
+          console.log('Health check correcto:', health);
+          NODE
+
+      - name: Analisis pasivo OWASP ZAP Baseline
+        uses: zaproxy/action-baseline@v0.15.0
+        with:
+          target: 'http://127.0.0.1:3000'
+          allow_issue_writing: false
+          fail_action: false
+          artifact_name: zap-nailflow
+
+      - name: Apagar el servidor temporal
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/nailflow-zap.pid" ]; then
+            server_pid="$(cat "$RUNNER_TEMP/nailflow-zap.pid")"
+            kill "$server_pid" 2>/dev/null || true
+            for attempt in {1..10}; do
+              if ! kill -0 "$server_pid" 2>/dev/null; then
+                break
+              fi
+              sleep 1
+            done
+            if kill -0 "$server_pid" 2>/dev/null; then
+              kill -KILL "$server_pid" 2>/dev/null || true
+            fi
+          fi
+          if [ -f "$RUNNER_TEMP/nailflow-zap.log" ]; then
+            cat "$RUNNER_TEMP/nailflow-zap.log"
+          fi
