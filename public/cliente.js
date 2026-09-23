@@ -34,7 +34,7 @@ function endSession() {
 async function api(
   path,
   method = "GET",
-  body
+  body = undefined
 ) {
   const headers = {};
 

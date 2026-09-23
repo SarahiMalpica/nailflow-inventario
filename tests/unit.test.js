@@ -35,6 +35,10 @@ describe("Validaciones unitarias", () => {
     ).toBe("Limas");
 
     expect(
+      v.text(" Limas/acrílico-180 ", "Nombre")
+    ).toBe("Limas/acrílico-180");
+
+    expect(
       v.credentials({
         email: "ADMIN@NAILFLOW.TEST",
         password: "Example2026!"

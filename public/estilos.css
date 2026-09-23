@@ -311,6 +311,11 @@ td {
 }
 
 #message {
+  display: block;
+  margin: 1em 0;
+  color: #665963;
+  line-height: 1.6;
+
   position: sticky;
   bottom: 20px;
 

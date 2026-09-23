@@ -33,6 +33,19 @@ function verifyPassword(password, encoded) {
   );
 }
 
+function administrator(req, res, next) {
+  if (req.user.role !== "administrador") {
+    return next(
+      new AppError(
+        "Necesitas permisos de administrador.",
+        403
+      )
+    );
+  }
+
+  next();
+}
+
 function createAuth(store, secret, clock = Date.now) {
   if (typeof secret !== "string" || secret.length < 32) {
     throw new Error(
@@ -109,7 +122,7 @@ function createAuth(store, secret, clock = Date.now) {
     try {
       const header = req.get("authorization");
 
-      if (!header || !header.startsWith("Bearer ")) {
+      if (!header?.startsWith("Bearer ")) {
         throw new AppError(
           "Inicia sesión para continuar.",
           401
@@ -186,19 +199,6 @@ function createAuth(store, secret, clock = Date.now) {
     } catch (error) {
       next(error);
     }
-  }
-
-  function administrator(req, res, next) {
-    if (req.user.role !== "administrador") {
-      return next(
-        new AppError(
-          "Necesitas permisos de administrador.",
-          403
-        )
-      );
-    }
-
-    next();
   }
 
   return {

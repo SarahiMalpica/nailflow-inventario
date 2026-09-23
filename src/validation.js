@@ -16,7 +16,7 @@ function text(value, label, max = 80) {
   }
 
   // Permite letras, números y signos sencillos; rechaza etiquetas HTML.
-  if (!/^[\p{L}\p{N} .,_()\/-]+$/u.test(clean)) {
+  if (!/^[\p{L}\p{N} .,_()/-]+$/u.test(clean)) {
     throw new AppError(`${label} no es válido.`);
   }
 

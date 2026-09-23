@@ -14,6 +14,23 @@ const {
   AppError
 } = require("./errors");
 
+// Agrega la propiedad lowStock a un material.
+function view(row) {
+  return {
+    ...row,
+    lowStock: row.quantity <= row.minimum
+  };
+}
+
+// Convierte un error de duplicado en un mensaje comprensible.
+function duplicate(error) {
+  if (error.message.includes("UNIQUE constraint")) {
+    throw new AppError("El material ya existe, incluso si fue eliminado. Usa otro nombre.", 409);
+  }
+
+  throw error;
+}
+
 function createStore(filename = ":memory:") {
   // Si se usará un archivo, crea su carpeta.
   if (filename !== ":memory:") {
@@ -97,14 +114,6 @@ function createStore(filename = ":memory:") {
     throw error;
   }
 
-  // Agrega la propiedad lowStock a un material.
-  function view(row) {
-    return {
-      ...row,
-      lowStock: row.quantity <= row.minimum
-    };
-  }
-
   // Busca un material por su identificador.
   function getProduct(id) {
     const row = db.prepare(`
@@ -116,15 +125,6 @@ function createStore(filename = ":memory:") {
     }
 
     return view(row);
-  }
-
-  // Convierte un error de duplicado en un mensaje comprensible.
-  function duplicate(error) {
-    if (error.message.includes("UNIQUE constraint")) {
-      throw new AppError("El material ya existe, incluso si fue eliminado. Usa otro nombre.", 409);
-    }
-
-    throw error;
   }
 
   // Cierra la conexión con SQLite.
