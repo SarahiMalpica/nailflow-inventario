@@ -187,6 +187,31 @@ async function checkSecurity(
     contentSecurityPolicy
   );
 
+  const embedderPolicy = page.headers.get(
+    "cross-origin-embedder-policy"
+  );
+
+  check(
+    "Política de aislamiento entre orígenes",
+    embedderPolicy === "require-corp",
+    "require-corp",
+    embedderPolicy
+  );
+
+  const permissionsPolicy = page.headers.get(
+    "permissions-policy"
+  );
+
+  const expectedPermissions =
+    "camera=(), geolocation=(), microphone=(), payment=(), usb=()";
+
+  check(
+    "Restricción de permisos del navegador",
+    permissionsPolicy === expectedPermissions,
+    expectedPermissions,
+    permissionsPolicy
+  );
+
   const contentType = page.headers.get(
     "x-content-type-options"
   );

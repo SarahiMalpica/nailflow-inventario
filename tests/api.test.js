@@ -430,6 +430,19 @@ describe("Integración de API y controles de seguridad", () => {
         page.headers["x-powered-by"]
       ).toBeUndefined();
 
+      const stylesheet = await request(app).get("/estilos.css");
+      const script = await request(app).get("/cliente.js");
+
+      for (const response of [page, stylesheet, script]) {
+        expect(response.status).toBe(200);
+        expect(
+          response.headers["cross-origin-embedder-policy"]
+        ).toBe("require-corp");
+        expect(
+          response.headers["permissions-policy"]
+        ).toBe("camera=(), geolocation=(), microphone=(), payment=(), usb=()");
+      }
+
       const missing = await request(app)
         .get("/no-existe");
 

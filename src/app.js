@@ -34,6 +34,9 @@ function createApp({
   // Agrega encabezados de seguridad.
   app.use(
     helmet({
+      crossOriginEmbedderPolicy: {
+        policy: "require-corp"
+      },
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
@@ -51,6 +54,15 @@ function createApp({
       }
     })
   );
+
+  // Restringe funciones del navegador en todas las respuestas.
+  app.use((req, res, next) => {
+    res.set(
+      "Permissions-Policy",
+      "camera=(), geolocation=(), microphone=(), payment=(), usb=()"
+    );
+    next();
+  });
 
   // Evita guardar respuestas privadas en la caché.
   app.use("/api", (req, res, next) => {
