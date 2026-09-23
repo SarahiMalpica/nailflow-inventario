@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
+
+  <title>NailFlow | Inventario</title>
+
+  <link
+    rel="stylesheet"
+    href="/estilos.css"
+  >
+
+  <script
+    src="/cliente.js"
+    defer
+  ></script>
+</head>
+
+<body>
+  <header>
+    <a class="brand" href="/">
+      NailFlow
+      <span>Inventario de materiales</span>
+    </a>
+
+  <main>
+    <!-- Inicio de sesión y registro -->
+    <section
+      id="login-panel"
+      class="login"
+    >
+      <p class="eyebrow">
+        CONTROL DE MATERIALES
+      </p>
+
+      <h1>
+        Administra tus recursos desde un solo lugar
+      </h1>
+
+      <p>
+        Consulta las existencias y registra el
+        material utilizado.
+      </p>
+
+      <form
+        id="login-form"
+        class="card"
+      >
+        <h2>Iniciar sesión</h2>
+
+        <label for="email">
+          Correo electrónico
+        </label>
+
+        <input
+          id="email"
+          type="email"
+          autocomplete="username"
+          required
+          maxlength="120"
+        >
+
+        <label for="password">
+          Contraseña
+        </label>
+
+        <input
+          id="password"
+          type="password"
+          autocomplete="current-password"
+          required
+          maxlength="128"
+        >
+
+        <button type="submit">
+          Entrar al inventario
+        </button>
+
+        <button
+          id="show-register"
+          type="button"
+          class="secondary"
+        >
+          Crear una cuenta
+        </button>
+      </form>
+
+      <form
+        id="register-form"
+        class="card"
+        hidden
+      >
+        <h2>Crear una cuenta</h2>
+
+        <p class="hint">
+          La primera cuenta será administradora.
+          Las siguientes serán cuentas de usuario.
+        </p>
+
+        <label for="register-email">
+          Correo electrónico
+        </label>
+
+        <input
+          id="register-email"
+          type="email"
+          autocomplete="username"
+          required
+          maxlength="120"
+        >
+
+        <label for="register-password">
+          Contraseña
+        </label>
+
+        <input
+          id="register-password"
+          type="password"
+          autocomplete="new-password"
+          required
+          maxlength="128"
+        >
+
+        <label for="register-confirm">
+          Confirmar contraseña
+        </label>
+
+        <input
+          id="register-confirm"
+          type="password"
+          autocomplete="new-password"
+          required
+          maxlength="128"
+        >
+
+        <button type="submit">
+          Registrarme
+        </button>
+
+        <button
+          id="show-login"
+          type="button"
+          class="secondary"
+        >
+          Ya tengo una cuenta
+        </button>
+      </form>
+    </section>
+
+    <!-- Inventario -->
+    <section
+      id="dashboard"
+      hidden
+    >
+      <div class="heading">
+        <div>
+          <p class="eyebrow">
+            TU ESPACIO DE TRABAJO
+          </p>
+
+          <h1>Inventario de materiales</h1>
+
+          <p id="identity"></p>
+        </div>
+
+        <button
+          id="logout"
+          class="secondary"
+          type="button"
+        >
+          Cerrar sesión
+        </button>
+      </div>
+
+      <!-- Resumen -->
+      <div class="stats">
+        <div class="card">
+          <span>Materiales registrados</span>
+          <strong id="count">0</strong>
+        </div>
+
+        <div class="card">
+          <span>Con existencias bajas</span>
+          <strong id="low-count">0</strong>
+        </div>
+      </div>
+
+      <div
+        id="alerts"
+        class="alert"
+        hidden
+      ></div>
+
+      <div class="columns">
+        <!-- Tabla de existencias -->
+        <section class="card">
+          <h2>Existencias actuales</h2>
+
+          <label for="search">
+            Buscar material
+          </label>
+
+          <input
+            id="search"
+            type="search"
+            placeholder="Escribe el nombre de un material"
+          >
+
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Material</th>
+                  <th>Existencia</th>
+                  <th>Mínimo</th>
+                  <th>Estado</th>
+                  <th id="actions-heading" hidden>Acciones</th>
+                </tr>
+              </thead>
+
+              <tbody id="products"></tbody>
+            </table>
+          </div>
+
+          <p id="empty" hidden>
+            No hay materiales registrados.
+          </p>
+        </section>
+
+        <!-- Formulario de movimientos -->
+        <section class="card">
+          <h2>Registrar movimiento</h2>
+
+          <form id="movement-form">
+            <label for="movement-product">
+              Material
+            </label>
+
+            <select
+              id="movement-product"
+              required
+            ></select>
+
+            <label for="movement-type">
+              Movimiento
+            </label>
+
+            <select id="movement-type" aria-describedby="movement-help">
+              <option value="consumo">
+                Consumo
+              </option>
+
+              <option
+                id="entry-option"
+                value="entrada"
+              >
+                Entrada
+              </option>
+              <option id="exit-option" value="salida" hidden disabled>
+                Salida por defecto u otra causa
+              </option>
+            </select>
+
+            <p id="movement-help" class="hint" hidden>
+              Registra primero la cantidad recibida como entrada. Si recibiste
+              5 barnices y 2 llegaron defectuosos, registra una salida de 2
+              con ese motivo: quedarán 3 disponibles.
+            </p>
+
+            <label for="movement-quantity">
+              Cantidad
+            </label>
+
+            <input
+              id="movement-quantity"
+              type="number"
+              min="1"
+              max="1000000"
+              step="1"
+              required
+            >
+
+            <label for="movement-note">
+              Motivo
+            </label>
+
+            <input
+              id="movement-note"
+              maxlength="120"
+              placeholder="Por ejemplo, material utilizado"
+              required
+            >
+
+            <button type="submit">
+              Guardar movimiento
+            </button>
+          </form>
+        </section>
+      </div>
+
+      <!-- Formulario exclusivo del administrador -->
+      <section
+        id="admin-panel"
+        class="card"
+        hidden
+      >
+        <h2 id="product-form-title">
+          Registrar material
+        </h2>
+
+        <form
+          id="product-form"
+          class="product-form"
+        >
+          <div>
+            <label for="name">
+              Nombre
+            </label>
+
+            <input
+              id="name"
+              maxlength="80"
+              required
+            >
+          </div>
+
+          <div>
+            <label for="unit">
+              Unidad
+            </label>
+
+            <input
+              id="unit"
+              maxlength="25"
+              placeholder="Piezas, cajas o frascos"
+              required
+            >
+          </div>
+
+          <div>
+            <label for="quantity">
+              Existencia inicial
+            </label>
+
+            <input
+              id="quantity"
+              type="number"
+              min="0"
+              max="1000000"
+              step="1"
+              required
+            >
+          </div>
+
+          <div>
+            <label for="minimum">
+              Existencia mínima
+            </label>
+
+            <input
+              id="minimum"
+              type="number"
+              min="0"
+              max="1000000"
+              step="1"
+              required
+            >
+          </div>
+
+          <button type="submit">
+            Guardar material
+          </button>
+
+          <button
+            id="cancel-edit"
+            type="button"
+            class="secondary"
+            hidden
+          >
+            Cancelar edición
+          </button>
+        </form>
+
+        <p class="hint">
+          Selecciona un material de la tabla
+          para editar su nombre, unidad o mínimo.
+          Las cantidades cambian mediante movimientos.
+        </p>
+      </section>
+
+      <!-- Historial -->
+      <section class="card history">
+        <h2>Últimos movimientos</h2>
+
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Material</th>
+                <th>Tipo</th>
+                <th>Cantidad</th>
+                <th>Motivo</th>
+                <th>Fecha</th>
+              </tr>
+            </thead>
+
+            <tbody id="history"></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+
+    <p
+      id="message"
+      role="status"
+      aria-live="polite"
+    ></p>
+  </main>
+
+  <footer>
+    NailFlow · Gestión de materiales
+  </footer>
+</body>
+</html>

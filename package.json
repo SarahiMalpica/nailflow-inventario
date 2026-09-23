@@ -1,0 +1,50 @@
+{
+  "name": "nailflow-inventario",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Prototipo académico de inventario con JWT, roles y pruebas",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.js",
+    "demo": "node --env-file-if-exists=.env server.js",
+    "test": "jest --runInBand",
+    "test:coverage": "jest --runInBand --coverage --json --outputFile=evidencias-del-proyecto/jest-resultados.json",
+    "security": "node scripts/security.js",
+    "pipeline:local": "node scripts/pipeline-local.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.0.0",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "jest": "^30.0.0",
+    "supertest": "^7.1.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.js"
+    ],
+    "coverageDirectory": "evidencias-del-proyecto/cobertura",
+    "coverageReporters": [
+      "text",
+      "lcovonly",
+      "json-summary"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 80,
+        "functions": 80,
+        "lines": 80,
+        "statements": 80
+      }
+    }
+  }
+}

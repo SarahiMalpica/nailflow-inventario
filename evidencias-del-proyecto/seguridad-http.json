@@ -1,0 +1,100 @@
+{
+  "tool": "Pruebas dinámicas propias por HTTP",
+  "executedAt": "2026-09-20T22:08:27.958Z",
+  "target": "http://127.0.0.1:52216",
+  "total": 15,
+  "passed": 15,
+  "checks": [
+    {
+      "name": "Política de scripts del mismo origen",
+      "passed": true,
+      "expected": "CSP restrictiva",
+      "actual": "default-src 'self';script-src 'self';style-src 'self';font-src 'self';img-src 'self';connect-src 'self';media-src 'none';child-src 'none';object-src 'none';frame-ancestors 'none';base-uri 'self';form-action 'self';script-src-attr 'none'"
+    },
+    {
+      "name": "Bloqueo de interpretación de tipos",
+      "passed": true,
+      "expected": "nosniff",
+      "actual": "nosniff"
+    },
+    {
+      "name": "Bloqueo de inclusión en marcos",
+      "passed": true,
+      "expected": "SAMEORIGIN",
+      "actual": "SAMEORIGIN"
+    },
+    {
+      "name": "Servidor sin cabecera de framework",
+      "passed": true,
+      "expected": "ausente",
+      "actual": null
+    },
+    {
+      "name": "Inventario sin sesión",
+      "passed": true,
+      "expected": 401,
+      "actual": 401
+    },
+    {
+      "name": "JWT alterado",
+      "passed": true,
+      "expected": 401,
+      "actual": 401
+    },
+    {
+      "name": "Alta sin rol administrador",
+      "passed": true,
+      "expected": 403,
+      "actual": 403
+    },
+    {
+      "name": "Entrada con rol usuario",
+      "passed": true,
+      "expected": 403,
+      "actual": 403
+    },
+    {
+      "name": "Intento de inyección SQL",
+      "passed": true,
+      "expected": 400,
+      "actual": 400
+    },
+    {
+      "name": "Intento de XSS en nombre",
+      "passed": true,
+      "expected": 400,
+      "actual": 400
+    },
+    {
+      "name": "Intento de XSS en bitácora",
+      "passed": true,
+      "expected": 400,
+      "actual": 400
+    },
+    {
+      "name": "Consumo que dejaría saldo negativo",
+      "passed": true,
+      "expected": 409,
+      "actual": 409
+    },
+    {
+      "name": "Intento de leer archivo de entorno",
+      "passed": true,
+      "expected": 404,
+      "actual": 404
+    },
+    {
+      "name": "Información privada sin caché",
+      "passed": true,
+      "expected": "no-store",
+      "actual": "no-store"
+    },
+    {
+      "name": "Token reutilizado después de cerrar sesión",
+      "passed": true,
+      "expected": 401,
+      "actual": 401
+    }
+  ],
+  "limitations": "Comprueba casos concretos de autenticación, autorización, XSS, SQLi y existencias. No reemplaza el análisis general de OWASP ZAP."
+}
