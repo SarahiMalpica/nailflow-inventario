@@ -31,6 +31,9 @@ function createApp({
   // Oculta información sobre Express.
   app.disable("x-powered-by");
 
+  // Solo Nginx en la misma instancia puede informar la IP real del cliente.
+  app.set("trust proxy", "loopback");
+
   // Agrega encabezados de seguridad.
   app.use(
     helmet({

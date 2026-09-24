@@ -6,87 +6,46 @@ on:
     types: [completed]
     branches: [main]
 
-  workflow_dispatch:
-
 permissions:
-  contents: read
+  contents: write
+
+concurrency:
+  group: nailflow-production
+  cancel-in-progress: false
 
 jobs:
-  deploy:
-    if: >
-      github.event_name == 'workflow_dispatch' ||
-      github.event.workflow_run.conclusion == 'success'
-
+  publish:
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_repository.full_name == github.repository
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-
+    timeout-minutes: 10
     steps:
-      - name: Descargar codigo aprobado
+      - name: Descargar la version que paso las pruebas
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          ref: ${{ github.event.workflow_run.head_sha }}
           persist-credentials: false
-
-      - name: Configurar credenciales de AWS
-        uses: aws-actions/configure-aws-credentials@v6
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region: us-east-1
-
-      - name: Preparar archivo desplegable
-        run: |
-          mkdir -p dist
-          cp -R public src server.js package.json package-lock.json dist/
-
-          cd dist
-          zip -r ../nailflow-deploy.zip .
-
-      - name: Desplegar en Elastic Beanstalk
+      - name: Publicar version para EC2
         env:
-          AWS_REGION: us-east-1
-          EB_APPLICATION: nailflow-inventario
-          EB_ENVIRONMENT: Nailflow-inventario-env
+          GH_TOKEN: ${{ github.token }}
+          DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
+        shell: bash
         run: |
           set -euo pipefail
-
-          DEPLOY_SHA="${{ github.event.workflow_run.head_sha || github.sha }}"
-          VERSION_LABEL="github-${GITHUB_RUN_NUMBER}-${DEPLOY_SHA:0:7}"
-
-          ACCOUNT_ID="$(aws sts get-caller-identity \
-            --query Account \
-            --output text)"
-
-          BUCKET="elasticbeanstalk-${AWS_REGION}-${ACCOUNT_ID}"
-          S3_KEY="nailflow-inventario/${VERSION_LABEL}.zip"
-
-          aws s3 cp \
-            nailflow-deploy.zip \
-            "s3://${BUCKET}/${S3_KEY}"
-
-          aws elasticbeanstalk create-application-version \
-            --application-name "${EB_APPLICATION}" \
-            --version-label "${VERSION_LABEL}" \
-            --description "Despliegue desde GitHub Actions" \
-            --source-bundle "S3Bucket=${BUCKET},S3Key=${S3_KEY}"
-
-          aws elasticbeanstalk update-environment \
-            --environment-name "${EB_ENVIRONMENT}" \
-            --version-label "${VERSION_LABEL}"
-
-          aws elasticbeanstalk wait environment-updated \
-            --environment-names "${EB_ENVIRONMENT}"
-
-          CNAME="$(aws elasticbeanstalk describe-environments \
-            --environment-names "${EB_ENVIRONMENT}" \
-            --query 'Environments[0].CNAME' \
-            --output text)"
-
-          curl --fail \
-            --retry 10 \
-            --retry-delay 5 \
-            --retry-all-errors \
-            "http://${CNAME}/api/health"
-
-          echo "Despliegue terminado: http://${CNAME}"
+          CURRENT_SHA="$(gh api "repos/${GITHUB_REPOSITORY}/commits/main" --jq .sha)"
+          if [ "$CURRENT_SHA" != "$DEPLOY_SHA" ]; then
+            echo 'Hay un cambio mas reciente en main; se omite esta version.'
+            exit 0
+          fi
+          mkdir -p dist
+          cp -R public src server.js package.json package-lock.json dist/
+          tar -czf nailflow.tar.gz -C dist .
+          HASH="$(sha256sum nailflow.tar.gz | cut -d ' ' -f1)"
+          TAG="ec2-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          jq -n --arg sha "$DEPLOY_SHA" --arg tag "$TAG" --arg checksum "$HASH" \
+            '{sha:$sha,tag:$tag,checksum:$checksum}' > manifest.json
+          gh release create "$TAG" --target "$DEPLOY_SHA" --draft \
+            --title "NailFlow EC2 ${DEPLOY_SHA:0:7}" \
+            --notes 'Version aprobada por Pipeline NailFlow. EC2 la instala al arrancar o en su siguiente comprobacion.' \
+            nailflow.tar.gz manifest.json
+          gh release edit "$TAG" --draft=false --latest
+          echo 'Version publicada. La instalacion y salud de EC2 se verifican en el servidor.' >> "$GITHUB_STEP_SUMMARY"

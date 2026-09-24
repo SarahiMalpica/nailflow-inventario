@@ -6,3 +6,5 @@ dist/
 .scannerwork/
 .sonar/
 *.log
+
+.deploy-local/
