@@ -1,5 +1,16 @@
 # NailFlow en EC2
 
+Instalacion del 24 de septiembre de 2026, region `us-east-1`:
+
+- Instancia: `i-0d3ef8e0ca0b0a8f5` (`nailflow-ec2`, Amazon Linux 2023).
+- Volumen EBS: `vol-0cb2b77b92aacf30c`, cifrado, 12 GiB, conservado al terminar la instancia.
+- Respaldo inicial privado y versionado:
+  `s3://nailflow-backups-473860152031/migration-20260924/inventario.sqlite`.
+- Migracion local autorizada: 3 usuarios, 3 materiales y 7 movimientos.
+
+El entorno anterior de Elastic Beanstalk sigue existiendo; ya no recibe despliegues
+de este workflow. Retirarlo por separado cuando ya no se necesite.
+
 El workflow `Pipeline NailFlow` prueba cada push a `main`. Si pasa, `Despliegue AWS`
 publica un release con el codigo, su commit y SHA-256. No contiene bases de datos,
 credenciales ni `.env`. El repositorio es publico; EC2 descarga los releases sin
